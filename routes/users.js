@@ -1,6 +1,8 @@
-const express = require('express');const router = express.Router();
+const express = require('express');
+const router = express.Router();
 const db = require('../db');
 const auth = require('../middleware/auth');
+const { isValidEmail } = require('../utils/validators');
 
 // Get all users with pagination (protected)
 router.get('/', auth, (req, res) => {
@@ -47,6 +49,10 @@ router.patch('/:userId', auth, (req, res) => {
 
   if (!name && !email && !password && !timezone) {
     return res.status(400).json({ error: 'At least one field is required' });
+  }
+
+  if (email && !isValidEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
   }
 
   const fields = [];
@@ -107,6 +113,10 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'Name, email, and password are required' });
   }
 
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
   const id = Date.now().toString(); // Simple ID generation
   console.log('Creating user with data:', { id, name, email, timezone });
 
@@ -141,4 +151,4 @@ router.get('/profile', auth, (req, res) => {
   res.json({ user: req.session.user });
 });
 
-module.exports = router; 
+module.exports = router;

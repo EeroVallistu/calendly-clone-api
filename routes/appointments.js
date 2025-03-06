@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const auth = require('../middleware/auth');
+const { isValidEmail } = require('../utils/validators');
 
 // Schedule an appointment
 router.post('/', auth, (req, res) => {
@@ -10,6 +11,10 @@ router.post('/', auth, (req, res) => {
 
   if (!eventId || !userId || !inviteeEmail || !startTime || !endTime) {
     return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  if (!isValidEmail(inviteeEmail)) {
+    return res.status(400).json({ error: 'Invalid invitee email format' });
   }
 
   const id = Date.now().toString();
@@ -32,6 +37,10 @@ router.patch('/:appointmentId', auth, (req, res) => {
 
   if (!eventId && !userId && !inviteeEmail && !startTime && !endTime && !status) {
     return res.status(400).json({ error: 'At least one field is required' });
+  }
+
+  if (inviteeEmail && !isValidEmail(inviteeEmail)) {
+    return res.status(400).json({ error: 'Invalid invitee email format' });
   }
 
   const fields = [];
@@ -117,4 +126,4 @@ router.get('/:appointmentId', auth, (req, res) => {
   });
 });
 
-module.exports = router; 
+module.exports = router;

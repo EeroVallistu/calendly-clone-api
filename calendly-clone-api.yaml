@@ -352,6 +352,14 @@ paths:
                     type: string
               example:
                 message: "Successfully logged out"
+        '400':
+          description: No token provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "No token provided"
         '401':
           description: Unauthorized
           content:
@@ -368,49 +376,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "An error occurred during logout"
-
-    get:
-      security:
-        - BearerAuth: []
-      tags:
-        - Authentication
-      summary: Check session
-      description: Check if user is authenticated
-      responses:
-        '200':
-          description: Session status
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  authenticated:
-                    type: boolean
-                  user:
-                    $ref: '#/components/schemas/User'
-              example:
-                authenticated: true
-                user:
-                  id: "user-123e4567-e89b-12d3-a456-426614174000"
-                  name: "John Doe"
-                  email: "john.doe@example.com"
-                  timezone: "America/New_York"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "Authentication token is invalid or expired"
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                message: "An error occurred while verifying authentication"
 
   /events:
     post:

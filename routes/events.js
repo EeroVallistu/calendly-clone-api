@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const auth = require('../middleware/auth');
+const { isValidHexColor } = require('../utils/validators');
 
 // Create a new event type
 router.post('/', auth, (req, res) => {
@@ -9,6 +10,10 @@ router.post('/', auth, (req, res) => {
 
   if (!name || !duration) {
     return res.status(400).json({ error: 'Name and duration are required' });
+  }
+
+  if (color && !isValidHexColor(color)) {
+    return res.status(400).json({ error: 'Color must be a valid hex color (e.g., #FF0000)' });
   }
 
   const id = Date.now().toString(); // Simple ID generation
@@ -45,6 +50,10 @@ router.patch('/:eventId', (req, res) => {
 
   if (!name && !duration && !description && !color) {
     return res.status(400).json({ error: 'At least one field is required' });
+  }
+
+  if (color && !isValidHexColor(color)) {
+    return res.status(400).json({ error: 'Color must be a valid hex color (e.g., #FF0000)' });
   }
 
   const fields = [];
@@ -107,4 +116,4 @@ router.get('/', (req, res) => {
   });
 });
 
-module.exports = router; 
+module.exports = router;
