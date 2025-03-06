@@ -118,7 +118,6 @@ router.post('/', (req, res) => {
   }
 
   const id = Date.now().toString(); // Simple ID generation
-  console.log('Creating user with data:', { id, name, email, timezone });
 
   db.run(
     'INSERT INTO users (id, name, email, password, timezone) VALUES (?, ?, ?, ?, ?)',
@@ -126,9 +125,12 @@ router.post('/', (req, res) => {
     function (err) {
       if (err) {
         console.error('Database error:', err.message); // Log the specific error
-        return res.status(500).json({ error: 'Database error', details: err.message });
+        // Check for unique constraint violation on email
+        if (err.message.includes('UNIQUE constraint failed: users.email')) {
+          return res.status(400).json({ error: 'Email already in use' });
+        }
+        return res.status(500).json({ error: 'Database error' });
       }
-      console.log('User created successfully:', this.lastID);
       res.status(201).json({ id, name, email, timezone });
     }
   );
