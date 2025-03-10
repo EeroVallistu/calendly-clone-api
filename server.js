@@ -15,13 +15,26 @@ const appointmentRoutes = require('./routes/appointments');
 const sessionsRoutes = require('./routes/sessions');
 const docsRouter = require('./routes/docs');
 
-// API and documentation routes
+// Mount documentation routes at specific paths
+app.use('/en', docsRouter);
+app.use('/et', docsRouter);
 app.use('/docs', docsRouter);
+
+// API routes without /api prefix
 app.use('/users', userRoutes);
 app.use('/events', auth, eventRoutes);
 app.use('/schedules', auth, scheduleRoutes);
 app.use('/appointments', auth, appointmentRoutes);
 app.use('/sessions', sessionsRoutes);
+
+// Root path redirects to documentation
+app.get('/', (req, res) => {
+  const userLang = req.headers["accept-language"];
+  if (userLang && userLang.includes('et')) {
+    return res.redirect('/et');
+  }
+  return res.redirect('/en');
+});
 
 // Serve static OpenAPI specs from docs directory
 app.use('/docs', express.static(path.join(__dirname, 'docs')));
@@ -79,7 +92,10 @@ app.use((req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`API docs available at http://localhost:${PORT}/docs`);
+  console.log(`API docs available at:`);
+  console.log(`  - http://localhost:${PORT}/en (English)`);
+  console.log(`  - http://localhost:${PORT}/et (Estonian)`);
+  console.log(`  - http://localhost:${PORT}/docs (Documentation root)`);
 });
 
 module.exports = app;

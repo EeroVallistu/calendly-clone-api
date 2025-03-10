@@ -4,42 +4,70 @@ const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const path = require('path');
 
-// Load both language versions
+// Load both language versions and main API spec
 const englishSpec = YAML.load(path.join(__dirname, '../docs/en/api.yaml'));
 const estonianSpec = YAML.load(path.join(__dirname, '../docs/et/api.yaml'));
+const mainSpec = YAML.load(path.join(__dirname, '../calendly-clone-api.yaml'));
 
-// Separate SwaggerUI options for each language
+// Base SwaggerUI options
+const baseOptions = {
+  explorer: true
+};
+
+// Language-specific options
 const englishOptions = {
-  explorer: true,
+  ...baseOptions,
   customSiteTitle: "API Documentation (English)",
   swaggerOptions: {
-    url: null, // Disable URL loading
+    url: null, // Use direct spec object
+    defaultModelsExpandDepth: 1,
+    docExpansion: 'list'
   }
 };
 
 const estonianOptions = {
-  explorer: true,
+  ...baseOptions,
   customSiteTitle: "API Dokumentatsioon (Eesti)",
   swaggerOptions: {
-    url: null, // Disable URL loading
+    url: null, // Use direct spec object
+    defaultModelsExpandDepth: 1,
+    docExpansion: 'list'
   }
 };
 
-// Serve English documentation
-router.use('/en', swaggerUi.serve);
-router.get('/en', (req, res) => {
-  res.send(swaggerUi.generateHTML(englishSpec, englishOptions));
-});
+const mainOptions = {
+  ...baseOptions,
+  customSiteTitle: "Calendly Clone API Documentation",
+  swaggerOptions: {
+    url: null,
+    defaultModelsExpandDepth: 1,
+    docExpansion: 'list'
+  }
+};
 
-// Serve Estonian documentation
-router.use('/et', swaggerUi.serve);
-router.get('/et', (req, res) => {
-  res.send(swaggerUi.generateHTML(estonianSpec, estonianOptions));
-});
-
-// Redirect root /docs to English version
+// Serve docs at the root path
+router.use('/', swaggerUi.serve);
 router.get('/', (req, res) => {
-  res.redirect('/docs/en');
+  if (router.mountpath === '/en') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.send(swaggerUi.generateHTML(englishSpec, englishOptions));
+  } else if (router.mountpath === '/et') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.send(swaggerUi.generateHTML(estonianSpec, estonianOptions));
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.send(swaggerUi.generateHTML(mainSpec, mainOptions));
+  }
+});
+
+// Catch-all for Swagger UI internal routes
+router.get('/*', (req, res, next) => {
+  // Pass through for asset requests
+  if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|ico)$/)) {
+    return next();
+  }
+  // Otherwise redirect to the root
+  res.redirect(router.mountpath);
 });
 
 module.exports = router;
