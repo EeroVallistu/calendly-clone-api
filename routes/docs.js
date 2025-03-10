@@ -45,19 +45,30 @@ const mainOptions = {
   }
 };
 
-// Serve docs at the root path
-router.use('/', swaggerUi.serve);
+// Serve swagger-ui assets
+router.use(swaggerUi.serve);
+
+// Specific handlers for each language path
 router.get('/', (req, res) => {
-  if (router.mountpath === '/en') {
+  // Determine which documentation to serve based on the current route path
+  const routePath = req.baseUrl || '';
+  
+  if (routePath === '/en') {
     res.setHeader('Cache-Control', 'public, max-age=300');
-    res.send(swaggerUi.generateHTML(englishSpec, englishOptions));
-  } else if (router.mountpath === '/et') {
+    return res.send(swaggerUi.generateHTML(englishSpec, englishOptions));
+  } 
+  else if (routePath === '/et') {
     res.setHeader('Cache-Control', 'public, max-age=300');
-    res.send(swaggerUi.generateHTML(estonianSpec, estonianOptions));
-  } else {
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    res.send(swaggerUi.generateHTML(mainSpec, mainOptions));
+    return res.send(swaggerUi.generateHTML(estonianSpec, estonianOptions));
   }
+  else if (routePath === '/docs') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.send(swaggerUi.generateHTML(mainSpec, mainOptions));
+  }
+  
+  // Default to English for any other path
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.send(swaggerUi.generateHTML(englishSpec, englishOptions));
 });
 
 // Catch-all for Swagger UI internal routes
@@ -66,8 +77,8 @@ router.get('/*', (req, res, next) => {
   if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|ico)$/)) {
     return next();
   }
-  // Otherwise redirect to the root
-  res.redirect(router.mountpath);
+  // Otherwise redirect to the root of the current path
+  res.redirect(req.baseUrl || '/');
 });
 
 module.exports = router;

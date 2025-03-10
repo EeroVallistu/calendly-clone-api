@@ -20,14 +20,7 @@ app.use('/en', docsRouter);
 app.use('/et', docsRouter);
 app.use('/docs', docsRouter);
 
-// API routes without /api prefix
-app.use('/users', userRoutes);
-app.use('/events', auth, eventRoutes);
-app.use('/schedules', auth, scheduleRoutes);
-app.use('/appointments', auth, appointmentRoutes);
-app.use('/sessions', sessionsRoutes);
-
-// Root path redirects to documentation
+// Root path redirects to documentation based on browser language
 app.get('/', (req, res) => {
   const userLang = req.headers["accept-language"];
   if (userLang && userLang.includes('et')) {
@@ -36,8 +29,15 @@ app.get('/', (req, res) => {
   return res.redirect('/en');
 });
 
-// Serve static OpenAPI specs from docs directory
-app.use('/docs', express.static(path.join(__dirname, 'docs')));
+// API routes without /api prefix
+app.use('/users', userRoutes);
+app.use('/events', auth, eventRoutes);
+app.use('/schedules', auth, scheduleRoutes);
+app.use('/appointments', auth, appointmentRoutes);
+app.use('/sessions', sessionsRoutes);
+
+// Serve static OpenAPI specs from docs directory (for raw YAML access)
+app.use('/docs/specs', express.static(path.join(__dirname, 'docs')));
 
 // Database initialization
 db.serialize(() => {
