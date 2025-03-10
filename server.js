@@ -1,9 +1,8 @@
 const express = require('express');
-const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./database.db');
 const auth = require('./middleware/auth');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -14,19 +13,18 @@ const eventRoutes = require('./routes/events');
 const scheduleRoutes = require('./routes/schedules');
 const appointmentRoutes = require('./routes/appointments');
 const sessionsRoutes = require('./routes/sessions');
+const docsRouter = require('./routes/docs');
 
-// Load OpenAPI spec
-const swaggerDocument = YAML.load('./calendly-clone-api.yaml');
-
-// Routes
+// API and documentation routes
+app.use('/docs', docsRouter);
 app.use('/users', userRoutes);
 app.use('/events', auth, eventRoutes);
 app.use('/schedules', auth, scheduleRoutes);
 app.use('/appointments', auth, appointmentRoutes);
 app.use('/sessions', sessionsRoutes);
 
-// Swagger documentation
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Serve static OpenAPI specs from docs directory
+app.use('/docs', express.static(path.join(__dirname, 'docs')));
 
 // Database initialization
 db.serialize(() => {
@@ -84,4 +82,4 @@ app.listen(PORT, () => {
   console.log(`API docs available at http://localhost:${PORT}/docs`);
 });
 
-module.exports = app; 
+module.exports = app;
