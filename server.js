@@ -3,9 +3,18 @@ const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./database.db');
 const auth = require('./middleware/auth');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+
+// Configure CORS
+app.use(cors({
+  origin: 'https://sanderprii.me',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // Import routes
 const userRoutes = require('./routes/users');
