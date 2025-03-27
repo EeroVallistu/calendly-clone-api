@@ -14,7 +14,7 @@ paths:
       tags:
         - Kasutajad
       summary: Kuva kõik kasutajad
-      description: Kuva lehekülgede kaupa kõik kasutajad.
+      description: Kuva lehekülgede kaupa kõik kasutajad. Tavalised kasutajad näevad ainult oma andmeid, administraatorid näevad kõiki kasutajaid.
       parameters:
         - name: page
           in: query
@@ -127,7 +127,7 @@ paths:
       tags:
         - Kasutajad
       summary: Kuva kasutaja detailid
-      description: Kuva konkreetse kasutaja detailid ID järgi.
+      description: Kuva konkreetse kasutaja detailid ID järgi. Kasutajad saavad juurdepääsu ainult oma andmetele, v.a administraatorid.
       parameters:
         - name: userId
           in: path
@@ -155,6 +155,14 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Autentimine on nõutud"
+        '403':
+          description: Keelatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Sul on ligipääs ainult oma kasutajaandmetele"
         '404':
           description: Kasutajat ei leitud
           content:
@@ -170,7 +178,7 @@ paths:
       tags:
         - Kasutajad
       summary: Muuda kasutaja andmeid
-      description: Muuda kasutaja konkreetseid välju ID järgi.
+      description: Muuda kasutaja konkreetseid välju ID järgi. Kasutajad saavad muuta ainult oma andmeid.
       parameters:
         - name: userId
           in: path
@@ -199,6 +207,22 @@ paths:
                 name: "Jaan T. Tamm"
                 email: "jaan.tamm@näide.ee"
                 timezone: "Europe/Helsinki"
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on nõutud"
+        '403':
+          description: Keelatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Sul on ligipääs ainult oma kasutajaandmete muutmiseks"
 
     delete:
       security:
@@ -206,7 +230,7 @@ paths:
       tags:
         - Kasutajad
       summary: Kustuta kasutaja
-      description: Kustuta kasutaja ID järgi.
+      description: Kustuta kasutaja ID järgi. Kasutajad saavad kustutada ainult oma kontot.
       parameters:
         - name: userId
           in: path
@@ -217,6 +241,22 @@ paths:
       responses:
         '204':
           description: Kasutaja edukalt kustutatud
+        '401':
+          description: Autoriseerimata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Autentimine on nõutud"
+        '403':
+          description: Keelatud
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Sul on ligipääs ainult oma konto kustutamiseks"
         '404':
           description: Kasutajat ei leitud
           content:

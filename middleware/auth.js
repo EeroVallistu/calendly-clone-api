@@ -30,4 +30,19 @@ const auth = async (req, res, next) => {
   }
 };
 
-module.exports = auth; 
+// Middleware to check if the authenticated user is the owner of the resource
+const checkOwnership = (req, res, next) => {
+  // Get the userId from the request parameters
+  const { userId } = req.params;
+  
+  // Check if the authenticated user is the owner of the resource
+  if (req.user && req.user.id === userId) {
+    // User is authorized to access/modify their own data
+    next();
+  } else {
+    // User is not authorized
+    res.status(403).json({ error: 'Forbidden: You can only access or modify your own data' });
+  }
+};
+
+module.exports = { auth, checkOwnership }; 

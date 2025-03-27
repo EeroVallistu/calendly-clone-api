@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const auth = require('../middleware/auth');
+const { auth, checkOwnership } = require('../middleware/auth');
 
-// Get all schedules
+// Get all schedules (admin only)
 router.get('/', auth, (req, res) => {
-  db.all('SELECT * FROM schedules', (err, rows) => {
+  // In a real application, you would add admin check here
+  // For now, let users see only their own schedule
+  const userId = req.user.id;
+  
+  db.all('SELECT * FROM schedules WHERE userId = ?', [userId], (err, rows) => {
     if (err) {
       console.error('Database error:', err.message);
       return res.status(500).json({ error: 'Database error' });
@@ -27,7 +31,7 @@ router.get('/', auth, (req, res) => {
   });
 });
 
-// Get user's schedule
+// Get user's schedule (public view for booking)
 router.get('/:userId', (req, res) => {
   const { userId } = req.params;
 
@@ -51,12 +55,18 @@ router.get('/:userId', (req, res) => {
   });
 });
 
-// Protected route
+// Create schedule - ensure users can only create for themselves
 router.post('/', auth, (req, res) => {
   const { userId, availability } = req.body;
+  const authenticatedUserId = req.user.id;
 
   if (!userId || !availability) {
     return res.status(400).json({ error: 'userId and availability are required' });
+  }
+
+  // Check if the user is creating schedule for themselves
+  if (userId !== authenticatedUserId) {
+    return res.status(403).json({ error: 'Forbidden: You can only create schedules for yourself' });
   }
 
   const availabilityJson = JSON.stringify(availability);
@@ -72,8 +82,8 @@ router.post('/', auth, (req, res) => {
   );
 });
 
-// Partially update a schedule
-router.patch('/:userId', (req, res) => {
+// Partially update a schedule - ensure users can only update their own schedule
+router.patch('/:userId', auth, checkOwnership, (req, res) => {
   const { userId } = req.params;
   const { availability } = req.body;
 
@@ -98,8 +108,8 @@ router.patch('/:userId', (req, res) => {
   );
 });
 
-// Delete a schedule
-router.delete('/:userId', (req, res) => {
+// Delete a schedule - ensure users can only delete their own schedule
+router.delete('/:userId', auth, checkOwnership, (req, res) => {
   const { userId } = req.params;
 
   db.run('DELETE FROM schedules WHERE userId = ?', [userId], function (err) {

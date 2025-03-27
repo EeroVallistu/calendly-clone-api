@@ -22,13 +22,13 @@ db.serialize(() => {
 
   // Insert events
   const events = [
-    { id: '101', name: 'Team Meeting', duration: 30, description: 'Daily standup', color: '#FF0000' },
-    { id: '102', name: 'Client Call', duration: 60, description: 'Monthly review', color: '#00FF00' }
+    { id: '101', name: 'Team Meeting', duration: 30, description: 'Daily standup', color: '#FF0000', userId: '1' },
+    { id: '102', name: 'Client Call', duration: 60, description: 'Monthly review', color: '#00FF00', userId: '2' }
   ];
 
-  const insertEvent = db.prepare('INSERT INTO events (id, name, duration, description, color) VALUES (?, ?, ?, ?, ?)');
+  const insertEvent = db.prepare('INSERT INTO events (id, name, duration, description, color, userId) VALUES (?, ?, ?, ?, ?, ?)');
   events.forEach(event => {
-    insertEvent.run(event.id, event.name, event.duration, event.description, event.color);
+    insertEvent.run(event.id, event.name, event.duration, event.description, event.color, event.userId);
   });
   insertEvent.finalize();
 

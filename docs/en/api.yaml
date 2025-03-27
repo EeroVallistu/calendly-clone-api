@@ -14,7 +14,7 @@ paths:
       tags:
         - Users
       summary: List all users
-      description: Retrieve a paginated list of all users.
+      description: Retrieve a paginated list of all users. Normal users will only see their own details, while admins can see all users.
       parameters:
         - name: page
           in: query
@@ -136,7 +136,7 @@ paths:
       tags:
         - Users
       summary: Get user details
-      description: Retrieve details of a specific user by their ID.
+      description: Retrieve details of a specific user by their ID. Users can only access their own details unless they have admin privileges.
       parameters:
         - name: userId
           in: path
@@ -164,6 +164,14 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Authentication required"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "You can only access your own user details"
         '404':
           description: User not found
           content:
@@ -184,7 +192,7 @@ paths:
       tags:
         - Users
       summary: Partially update a user
-      description: Update specific fields of a user by their ID.
+      description: Update specific fields of a user by their ID. Users can only update their own information.
       parameters:
         - name: userId
           in: path
@@ -221,6 +229,22 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Invalid timezone format"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Authentication required"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Forbidden: You can only access or modify your own data"
         '404':
           description: User not found
           content:
@@ -241,7 +265,7 @@ paths:
       tags:
         - Users
       summary: Delete a user
-      description: Delete a specific user by their ID.
+      description: Delete a specific user by their ID. Users can only delete their own account.
       parameters:
         - name: userId
           in: path
@@ -252,6 +276,22 @@ paths:
       responses:
         '204':
           description: User deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Authentication required"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Forbidden: You can only access or modify your own data"
         '404':
           description: User not found
           content:

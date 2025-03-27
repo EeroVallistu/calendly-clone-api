@@ -1,7 +1,7 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./database.db');
-const auth = require('./middleware/auth');
+const { auth } = require('./middleware/auth');
 const path = require('path');
 const cors = require('cors');
 
@@ -64,7 +64,9 @@ db.serialize(() => {
     name TEXT NOT NULL,
     duration INTEGER NOT NULL,
     description TEXT,
-    color TEXT
+    color TEXT,
+    userId TEXT NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id)
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS schedules (

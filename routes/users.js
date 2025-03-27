@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const auth = require('../middleware/auth');
+const { auth, checkOwnership } = require('../middleware/auth');
 const { isValidEmail } = require('../utils/validators');
 
 // Get all users with pagination (protected)
@@ -43,7 +43,7 @@ router.get('/:userId', auth, (req, res) => {
 });
 
 // Partially update a user
-router.patch('/:userId', auth, (req, res) => {
+router.patch('/:userId', auth, checkOwnership, (req, res) => {
   const { userId } = req.params;
   const { name, email, password, timezone } = req.body;
 
@@ -91,7 +91,7 @@ router.patch('/:userId', auth, (req, res) => {
 });
 
 // Delete a user
-router.delete('/:userId', auth, (req, res) => {
+router.delete('/:userId', auth, checkOwnership, (req, res) => {
   const { userId } = req.params;
 
   db.run('DELETE FROM users WHERE id = ?', [userId], function (err) {

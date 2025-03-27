@@ -1,15 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const { isValidEmail } = require('../utils/validators');
+
+// Custom middleware to check if user owns the appointment
+const checkAppointmentOwnership = (req, res, next) => {
+  const { appointmentId } = req.params;
+  const userId = req.user.id;
+
+  db.get('SELECT userId FROM appointments WHERE id = ?', [appointmentId], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (!row) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+    if (row.userId !== userId) {
+      return res.status(403).json({ error: 'Forbidden: You can only modify your own appointments' });
+    }
+    next();
+  });
+};
 
 // Schedule an appointment
 router.post('/', auth, (req, res) => {
-  const { eventId, userId, inviteeEmail, startTime, endTime } = req.body;
+  const { eventId, inviteeEmail, startTime, endTime } = req.body;
+  const userId = req.user.id; // Get the authenticated user's ID
   const status = 'scheduled'; // Default status
 
-  if (!eventId || !userId || !inviteeEmail || !startTime || !endTime) {
+  if (!eventId || !inviteeEmail || !startTime || !endTime) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
@@ -31,11 +51,11 @@ router.post('/', auth, (req, res) => {
 });
 
 // Partially update an appointment
-router.patch('/:appointmentId', auth, (req, res) => {
+router.patch('/:appointmentId', auth, checkAppointmentOwnership, (req, res) => {
   const { appointmentId } = req.params;
-  const { eventId, userId, inviteeEmail, startTime, endTime, status } = req.body;
+  const { eventId, inviteeEmail, startTime, endTime, status } = req.body;
 
-  if (!eventId && !userId && !inviteeEmail && !startTime && !endTime && !status) {
+  if (!eventId && !inviteeEmail && !startTime && !endTime && !status) {
     return res.status(400).json({ error: 'At least one field is required' });
   }
 
@@ -49,10 +69,6 @@ router.patch('/:appointmentId', auth, (req, res) => {
   if (eventId) {
     fields.push('eventId = ?');
     values.push(eventId);
-  }
-  if (userId) {
-    fields.push('userId = ?');
-    values.push(userId);
   }
   if (inviteeEmail) {
     fields.push('inviteeEmail = ?');
@@ -82,12 +98,12 @@ router.patch('/:appointmentId', auth, (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ error: 'Appointment not found' });
     }
-    res.json({ id: appointmentId, eventId, userId, inviteeEmail, startTime, endTime, status });
+    res.json({ id: appointmentId, eventId, userId: req.user.id, inviteeEmail, startTime, endTime, status });
   });
 });
 
 // Delete an appointment
-router.delete('/:appointmentId', auth, (req, res) => {
+router.delete('/:appointmentId', auth, checkAppointmentOwnership, (req, res) => {
   const { appointmentId } = req.params;
 
   db.run('DELETE FROM appointments WHERE id = ?', [appointmentId], function (err) {
@@ -101,9 +117,11 @@ router.delete('/:appointmentId', auth, (req, res) => {
   });
 });
 
-// Get all appointments
+// Get all appointments (users can only see their own appointments)
 router.get('/', auth, (req, res) => {
-  db.all('SELECT * FROM appointments', (err, rows) => {
+  const userId = req.user.id;
+  
+  db.all('SELECT * FROM appointments WHERE userId = ?', [userId], (err, rows) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
@@ -114,8 +132,9 @@ router.get('/', auth, (req, res) => {
 // Get a specific appointment by ID
 router.get('/:appointmentId', auth, (req, res) => {
   const { appointmentId } = req.params;
+  const userId = req.user.id;
 
-  db.get('SELECT * FROM appointments WHERE id = ?', [appointmentId], (err, row) => {
+  db.get('SELECT * FROM appointments WHERE id = ? AND userId = ?', [appointmentId, userId], (err, row) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
