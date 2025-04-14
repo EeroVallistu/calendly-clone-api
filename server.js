@@ -4,6 +4,10 @@ const db = new sqlite3.Database('./database.db');
 const { auth } = require('./middleware/auth');
 const path = require('path');
 const cors = require('cors');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 app.use(express.json());
